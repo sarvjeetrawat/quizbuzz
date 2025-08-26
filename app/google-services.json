@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "895897963517",
+    "project_id": "quizbuzz-bd51a",
+    "storage_bucket": "quizbuzz-bd51a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:895897963517:android:1714b632fe0da8043ca794",
+        "android_client_info": {
+          "package_name": "com.kunpitech.quizbuzz"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgYVqVwgbIu8JCl2wDTDc5WQ-rQoq-jiI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
