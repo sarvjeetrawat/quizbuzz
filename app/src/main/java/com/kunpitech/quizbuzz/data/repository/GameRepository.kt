@@ -38,7 +38,8 @@ object GameRepository {
                 val roomData = mapOf(
                     "player1" to otherPlayerId,
                     "player2" to userId,
-                    "currentQuestion" to "Q1"
+                    "currentQuestion" to "Q1",
+                    "scores" to mapOf(otherPlayerId to 0, userId to 0)
                 )
 
                 db.child("rooms").child(roomId).setValue(roomData)

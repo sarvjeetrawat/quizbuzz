@@ -18,25 +18,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.kunpitech.quizbuzz.R
 import com.kunpitech.quizbuzz.data.repository.GameRepository.joinGame
+import com.kunpitech.quizbuzz.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     userName: String = "Player",
-    userId: String, // 🔹 unique id for firebase (can use FirebaseAuth UID or random UUID)
+    userId: String,
     onStartQuiz: (roomId: String) -> Unit,
-    onProfileClick: () -> Unit
+    navController: NavController
 ) {
     val context = LocalContext.current
-    var isLoading by remember { mutableStateOf(false) }
+    var isWaiting by remember { mutableStateOf(false) }
+    var waitingMessage by remember { mutableStateOf("Start Quiz") }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("QuizBuzz") }
-            )
+            TopAppBar(title = { Text("QuizBuzz") })
         }
     ) { padding ->
         Column(
@@ -66,29 +67,37 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Start Quiz Button
+            // Start Quiz / Waiting Button
             Button(
                 onClick = {
-                    isLoading = true
-                    joinGame(userId) { roomId ->
-                        isLoading = false
-                        onStartQuiz(roomId) // 🔹 navigate to quiz screen
+                    if (!isWaiting) {
+                        isWaiting = true
+                        waitingMessage = "Waiting for another player..."
+                        joinGame(userId) { roomId ->
+                            isWaiting = false
+                            waitingMessage = "Start Quiz"
+                            onStartQuiz(roomId) // Navigate only when room is assigned
+                        }
                     }
                 },
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp),
-                enabled = !isLoading
+                enabled = !isWaiting
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
-                    )
+                if (isWaiting) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = waitingMessage, fontSize = 16.sp)
+                    }
                 } else {
-                    Text(text = "Start Quiz", fontSize = 18.sp)
+                    Text(text = waitingMessage, fontSize = 18.sp)
                 }
             }
 
@@ -96,13 +105,16 @@ fun HomeScreen(
 
             // Profile Button
             OutlinedButton(
-                onClick = onProfileClick,
+                onClick = { navController.navigate(Screen.Profile.route) },
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
             ) {
                 Text(text = "Profile")
             }
         }
     }
 }
+
 

@@ -15,10 +15,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.kunpitech.quizbuzz.data.local.UserPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 @Composable
 fun LoginScreen(
@@ -30,6 +32,8 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
+
+    val deviceId = remember { UUID.randomUUID().toString() }
 
     // Load saved credentials once
     LaunchedEffect(Unit) {
@@ -89,14 +93,37 @@ fun LoginScreen(
                 loading = true
                 auth.signInWithEmailAndPassword(email.trim(), password)
                     .addOnCompleteListener { task ->
-                        loading = false
                         if (task.isSuccessful) {
-                            // ✅ Save credentials
-                            CoroutineScope(Dispatchers.IO).launch {
-                                UserPreferences.saveCredentials(context, email, password)
+                            val user = auth.currentUser
+                            val uid = user?.uid ?: ""
+
+                            val userRef = FirebaseDatabase.getInstance()
+                                .getReference("users")
+                                .child(uid)
+                                .child("activeDevice")
+
+                            userRef.get().addOnSuccessListener { snapshot ->
+                                val activeDevice = snapshot.getValue(String::class.java)
+
+                                if (activeDevice != null && activeDevice != deviceId) {
+                                    // ❌ Already logged in elsewhere
+                                    auth.signOut()
+                                    loading = false
+                                    errorMessage = "This user is already logged in on another device"
+                                } else {
+                                    // ✅ Allow login and set this device as active
+                                    userRef.setValue(deviceId)
+
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        UserPreferences.saveCredentials(context, email, password)
+                                    }
+
+                                    loading = false
+                                    onLoginSuccess()
+                                }
                             }
-                            onLoginSuccess()
                         } else {
+                            loading = false
                             errorMessage = task.exception?.message ?: "Login failed"
                         }
                     }
