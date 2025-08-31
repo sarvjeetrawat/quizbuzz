@@ -232,7 +232,7 @@ fun ProfileScreen(
                                             val githubUrl = uploadImageToGitHub(
                                                 imageStream = baos.toByteArray().inputStream(),
                                                 fileName = "${uid}.jpg",
-                                                githubToken = "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",
+                                                githubToken = "",
                                                 repoName = "quizzimages",
                                                 userName = "sarvjeetrawat"
                                             )
