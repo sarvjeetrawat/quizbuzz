@@ -229,13 +229,7 @@ fun ProfileScreen(
                                         CoroutineScope(Dispatchers.IO).launch {
                                             val baos = ByteArrayOutputStream()
                                             bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos)
-                                            val githubUrl = uploadImageToGitHub(
-                                                imageStream = baos.toByteArray().inputStream(),
-                                                fileName = "${uid}.jpg",
-                                                githubToken = "",
-                                                repoName = "quizzimages",
-                                                userName = "sarvjeetrawat"
-                                            )
+                                            val githubUrl = ""
 
                                             if (githubUrl != null) {
                                                 // Save bitmap locally
