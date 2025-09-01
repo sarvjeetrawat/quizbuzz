@@ -35,21 +35,29 @@ object GameRepository {
                 val otherPlayerId = snapshot.value.toString()
                 val roomId = UUID.randomUUID().toString()
 
-                val roomData = mapOf(
-                    "player1" to otherPlayerId,
-                    "player2" to userId,
-                    "currentQuestion" to "Q1",
-                    "scores" to mapOf(otherPlayerId to 0, userId to 0)
-                )
+                // Step 2a: Fetch all question IDs from Firebase
+                db.child("questions").get().addOnSuccessListener { qSnap ->
+                    val allQuestionIds = qSnap.children.mapNotNull { it.key }
 
-                db.child("rooms").child(roomId).setValue(roomData)
-                    .addOnSuccessListener {
-                        // Assign both users
-                        db.child("waitingRoomAssignments").child(otherPlayerId).setValue(roomId)
-                        db.child("waitingRoomAssignments").child(userId).setValue(roomId)
+                    // Step 2b: Pick only 10 random questions
+                    val selectedQuestions = allQuestionIds.shuffled().take(10)
 
-                        waitingRef.removeValue()
-                    }
+                    val roomData = mapOf(
+                        "player1" to otherPlayerId,
+                        "player2" to userId,
+                        "currentQuestionIndex" to 0, // start from first of 10
+                        "questionOrder" to selectedQuestions,
+                        "scores" to mapOf(otherPlayerId to 0, userId to 0)
+                    )
+
+                    // Step 2c: Save room and assignments
+                    db.child("rooms").child(roomId).setValue(roomData)
+                        .addOnSuccessListener {
+                            db.child("waitingRoomAssignments").child(otherPlayerId).setValue(roomId)
+                            db.child("waitingRoomAssignments").child(userId).setValue(roomId)
+                            waitingRef.removeValue() // clear waiting
+                        }
+                }
 
             } else {
                 // No one waiting → set myself as waiting
